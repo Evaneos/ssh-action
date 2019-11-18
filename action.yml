@@ -7,10 +7,10 @@ inputs:
     description: Remote host(s) to connect to
     required: true
   commands:
-    description: One or multiple commands to run on the remote hosts
+    description: One or multiple commands to run on the remote host(s)
     required: true
   user:
-    description: Remot user to connect with
+    description: Remote user to connect with
     required: true
   port:
     description: Remote port to connect to
@@ -23,13 +23,13 @@ inputs:
     description: Password to connect with
     required: false
   known_hosts:
-    description: Known hosts keys that SSH can rely on to connect to the remote host
+    description: Known hosts keys that SSH can rely on to connect to the remote host(s)
     required: false
   knock_sequence:
     description: Knock sequence performed onto the remote host before connecting to it
     required: false
   ssh_config:
-    description: SSH config to use to connect to the remote host
+    description: SSH config to use to connect to the remote host(s)
     required: false
 
 outputs: {}

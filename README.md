@@ -14,7 +14,7 @@ You can:
 
 This Github action is rather young and it might not be as stable and battle-tested as you need: use it at your own risk.
 
-## Usage
+## Usage examples
 
 ### Basic usage
 
@@ -54,58 +54,57 @@ steps:
       echo "...multiple commands"
 ```
 
-### SSH config<a name="ssh-config"></a>
+## Inputs
 
-You can specify a `ssh_config` input with a compliant SSH config ([`man ssh_config`](https://linux.die.net/man/5/ssh_config)) which will be dumped as is in `~/.ssh/config`.
+| Parameter                           | Required                                  | Description                                                          |
+|-------------------------------------|-------------------------------------------|----------------------------------------------------------------------|
+| [`hosts`](#hosts)                   | Yes                                       | Remote host(s) to connect to                                         |
+| `commands`                          | Yes                                       | One or multiple commands to run on the remote host(s)                |
+| `user`                              | [Sometimes](#ssh-config--optional-inputs) | Remote user to connect with                                          |
+| `port`                              | [Sometimes](#ssh-config--optional-inputs) | Remote port to connect to (_default: `22`_)                          |
+| [`private_key`](#private-key)       | [Sometimes](#password-or-private-key)     | Private SSH key to connect with                                      |
+| `password`                          | [Sometimes](password-or-private-key)      | Password to connect with                                             |
+| [`known_hosts`](#known-hosts)       | No                                        | Known hosts keys that SSH can rely on to connect to the remote hosts |
+| [`knock_sequence`](#knock-sequence) | No                                        | Knock sequence performed onto remote host(s) before connecting to it |
+| [`ssh_config`](#ssh-config)         | No                                        | SSH config to use to connect to remote host(s)                       |
 
-Among other things, this will allow you to use a bastion or jump hosts or change the behaviour of the knock sequence.
+## Outputs
 
-In such case, beware:
-- the `user` input is ignored, specify the `User` in `ssh_config`
-- the `port` input is ignored, specify the `Port` in `ssh_config` if it's not standard
-- the `knock_sequence` input is ignored, specify a `ProxyCommand` in `ssh_config` if you need it
-  + Example: `ProxyCommand /bin/sh -c 'until nc -zv %h %p -w 1 2>&1 ; do knock %h 111 222 333 ; done; exec nc %h %p'`
-- do not declare the `IdentityFile` as its location is hard-coded (`~/.ssh/id_rsa`)
+_No output is generated._
 
-### Port
+## Configuration
 
-If your port is not standard (`22`), you can specify it through the `port` input.
+### Hosts<a name="hosts"></a>
 
-Note it is ignored if you declare an `ssh_config` input.
+Specify the remote host(s) - [they all must share the same authentication](#one-auth-for-all-hosts) - to run the `commands` on via the `hosts` input.
 
-### Authentication
+### Private SSH key<a name="private-key"></a>
 
-#### Private SSH key<a name="private-key"></a>
+To authenticate yourself, you can use a private SSH key with the `private_key` input [**using a PEM format**](#not-a-valid-rsa-private-key). The script will dump the SSH private key to `~/.ssh/id_rsa`.
 
-To authenticate yourself, you can use a private SSH key with the `private_key` input.
+Note if you both `password` and `private_key`, `password` will be ignored.<a name="password-or-private-key"></a>
 
-The script dumps the SSH private key to `~/.ssh/id_rsa`.
+### Known hosts<a name="known-hosts"></a>
 
-Note if you both `password` and `private_key`, `password` will be ignored.
+You can specify explicit one or multiple known hosts keys using the `known_host` input.
 
-Beware you need to use a PEM-formatted SSH key because `paramiko`, one of the library behind this action, does not support the newest key formats [[reference](https://github.com/paramiko/paramiko/issues/340#issuecomment-492448662)].
+When not specifying `known_hosts`, the option `StrictHostKeyChecking=no` is added in the `ssh_config`: in such cases, you are exposing yourself to security risks! ⚠️
 
-#### Password
-
-To authenticate yourself, you can use a `password`.
-
-The script passes the password to the SSH CLI through `sshpass`
-
-#### Known hosts
-
-You can specify explicit one or multiple (for jump host for example) known hosts keys using the `known_host` input.
-
-If you do not specify the `known_hosts` input, the option `StrictHostKeyChecking=no` will be put in the SSH config file.
-
-⚠️ Be aware that by not specifying `known_hosts`, you would be exposing yourself to security risks.
-
-#### Knock sequence
+### Knock sequence<a name="knock-sequence"></a>
 
 If your remote host needs a knocking sequence (see [`man knock`](https://linux.die.net/man/1/knock)), you can specify the sequence through the `knock_sequence` input.
 
 For example, with a `knock_sequence` of `111 222 333`, the action will create an SSH config with a `ProxyCommand` that will knock the `host` until it is reachable or will fail after 10 attemps.
 
 You can change this behaviour by specifying your own SSH config (see the [**SSH config**](#ssh-config) section).
+
+### SSH config<a name="ssh-config"></a>
+
+To have complete control over the connection behaviour, you can specify a `ssh_config` input with a compliant SSH config ([`man ssh_config`](https://linux.die.net/man/5/ssh_config)) which will be dumped as is in `~/.ssh/config`.
+
+Beware, the `user`, `port` & `knock_sequence` inputs will be ignored, specify them explicitely in your `ssh_config`. Also note that you cannot declare the `IdentityFile` as its location is hard-coded (`~/.ssh/id_rsa`).<a name="ssh-config--optional-inputs"></a>
+
+## Limitations
 
 ### Use environment variables
 
@@ -128,29 +127,16 @@ steps:
       # [...]
 ```
 
-## Configuration
+### One authentication for every hosts<a name="one-auth-for-all-hosts"></a>
 
-See [`action.yaml`](./action.yaml).
+You cannot have multiple SSH keys or passwords for all the `hosts`: they must share the same authentication method **AND** the same credential (i.e. same `password` or same `private_key`).
 
 ## Troubleshooting
 
-### "Not a valid RSA private key file"
+### "Not a valid RSA private key file"<a name="not-a-valid-rsa-private-key"></a>
 
-See the [**Private SSH key**](#private-key) section, you need to use a PEM-formatted SSH key:
+You need to use a PEM-formatted SSH private key because `paramiko`, one of the library behind this action, does not support the newest key formats [[reference](https://github.com/paramiko/paramiko/issues/340#issuecomment-492448662)]:
 
 ```shell
 ssh-keygen -t rsa -b 4096 -C "email@email.com" -m PEM
 ```
-
-## Todo
-
-- Add pipenv integration in Dockerfile
-- Add Contributing guidelines
-- Add better disclaimer and manage expectation
-- Add more dependencies/implementation details
-- Add changelog
-- Add release(s)
-- Document Docker repo 
-- Publish to marketplace
-- Tests
-- CI
