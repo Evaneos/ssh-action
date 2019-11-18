@@ -1,0 +1,43 @@
+name: 'SSH command runner'
+
+description: 'Run command on a remote host using SSH on multiple hosts'
+
+inputs:
+  hosts:
+    description: Remote host(s) to connect to
+    required: true
+  commands:
+    description: One or multiple commands to run on the remote hosts
+    required: true
+  user:
+    description: Remot user to connect with
+    required: true
+  port:
+    description: Remote port to connect to
+    required: false
+    default: 22
+  private_key:
+    description: Private SSH key to connect with
+    required: false
+  password:
+    description: Password to connect with
+    required: false
+  known_hosts:
+    description: Known hosts keys that SSH can rely on to connect to the remote host
+    required: false
+  knock_sequence:
+    description: Knock sequence performed onto the remote host before connecting to it
+    required: false
+  ssh_config:
+    description: SSH config to use to connect to the remote host
+    required: false
+
+outputs: {}
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+
+branding:
+  icon: 'server'  # terminal
+  color: 'gray-dark'
