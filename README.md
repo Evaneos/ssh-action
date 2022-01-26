@@ -1,3 +1,7 @@
+:warning: This action is not maintained anymore. You can find alternative actions [here](https://github.com/marketplace?category=&query=ssh+sort%3Apopularity-desc&type=actions&verification=).
+
+---
+
 [![Docker badge](https://img.shields.io/badge/docker-ssh--action-blue.svg?style=flat-square&logo=docker)](https://hub.docker.com/repository/docker/evaneos/ssh-action)
 
 # SSH
